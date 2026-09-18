@@ -1,17 +1,28 @@
-/* Minimal service worker — required for Chrome "Install app" */
-const CACHE = 'coop-manager-v1';
+/* Service worker for Chrome Install app on GitHub Pages (/Akcool/) */
+const CACHE = 'coop-manager-v3';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './pwa-icons/icon-192.png',
-  './pwa-icons/icon-512.png'
+  './icon-192.png',
+  './icon-512.png',
+  './icon-180.png',
+  './icon-32.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // Do not use addAll — one missing file must not block SW activation
+    for (const url of PRECACHE) {
+      try {
+        await cache.add(url);
+      } catch (e) {
+        console.warn('Precache skip', url, e);
+      }
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
@@ -23,16 +34,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  // Network-first for HTML/app shell; cache fallback offline
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    fetch(req)
+    fetch(event.request)
       .then((res) => {
         const copy = res.clone();
-        caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => {});
+        caches.open(CACHE).then((c) => c.put(event.request, copy)).catch(() => {});
         return res;
       })
-      .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
+      .catch(() =>
+        caches.match(event.request).then((c) => c || caches.match('./index.html'))
+      )
   );
 });

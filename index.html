@@ -13,8 +13,8 @@
   <meta name="apple-mobile-web-app-title" content="Coop Manager" />
   <meta name="description" content="Cooperative savings, loans, and member management system" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/png" sizes="32x32" href="pwa-icons/icon-32.png" />
-  <link rel="apple-touch-icon" href="pwa-icons/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -3750,7 +3750,9 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').catch(function (err) {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).then(function (reg) {
+          console.log('SW registered', reg.scope);
+        }).catch(function (err) {
           console.warn('Service worker registration failed:', err);
         });
       });
